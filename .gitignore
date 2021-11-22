@@ -1,0 +1,6 @@
+target/
+*.sw?
+
+.bloop
+.metals
+metals.sbt
