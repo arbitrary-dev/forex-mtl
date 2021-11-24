@@ -6,6 +6,7 @@ import errors._
 import forex.domain._
 import forex.services.RatesService
 
+// TODO ProgramIntSpec
 class Program[F[_]: Functor](
     ratesService: RatesService[F]
 ) extends Algebra[F] {
