@@ -6,7 +6,7 @@ import forex.domain.Rate.Pair
 import forex.domain._
 import io.circe._
 import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
+import io.circe.generic.extras.semiauto.{ deriveConfiguredDecoder, deriveConfiguredEncoder }
 
 object Protocol {
 
@@ -24,14 +24,22 @@ object Protocol {
       timestamp: Timestamp
   )
 
-  implicit val currencyEncoder: Encoder[Currency] =
+  // TODO test invalid Currency
+  private implicit val currencyEncoder: Encoder[Currency] =
     Encoder.instance[Currency] { show.show _ andThen Json.fromString }
 
-  implicit val pairEncoder: Encoder[Pair] =
-    deriveConfiguredEncoder[Pair]
+  private implicit val pairDecoder: Decoder[Pair] =
+    deriveConfiguredDecoder[Pair]
 
-  implicit val rateEncoder: Encoder[Rate] =
-    deriveConfiguredEncoder[Rate]
+  implicit val rateDecoder: Decoder[Rate] = (c) => {
+    for {
+      pair <- c.as[Pair]
+      price <- c.downField("price").as[Price]
+      timestamp <- c.downField("time_stamp").as[Timestamp]
+    } yield {
+      Rate(pair, price, timestamp)
+    }
+  }
 
   implicit val responseEncoder: Encoder[GetApiResponse] =
     deriveConfiguredEncoder[GetApiResponse]
