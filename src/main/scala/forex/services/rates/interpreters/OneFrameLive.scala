@@ -14,7 +14,6 @@ import org.http4s.{ Header, Headers, Request }
 
 import scala.concurrent.ExecutionContext
 
-// TODO OneFrameLiveIntSpec
 class OneFrameLive[F[_]: ConcurrentEffect](config: RatesServiceConfig, ec: ExecutionContext) extends Algebra[F] {
 
   private val headers = Headers.of(Header("token", config.token))
@@ -26,6 +25,7 @@ class OneFrameLive[F[_]: ConcurrentEffect](config: RatesServiceConfig, ec: Execu
         headers = headers,
       )
       // TODO log errors
+      // TODO log calls
       client
         .expect[List[Rate]](request)
         .map(_.headOption.toRight(Error.OneFrameLookupFailed("no rate for pair")))
