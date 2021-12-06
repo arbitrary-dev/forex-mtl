@@ -65,9 +65,11 @@ libraryDependencies ++= Seq(
   Libraries.pureConfig,
   Libraries.scaffeine,
   Libraries.logback,
-  Libraries.scalaTest        % "it,test",
-  Libraries.scalaCheck       % "it,test",
-  Libraries.catsScalaCheck   % "it,test",
+  Libraries.scalaTest          % "it,test",
+  Libraries.scalaTestPlusCheck % "it,test",
+  Libraries.scalaCheck         % "it,test",
+  Libraries.catsScalaTest      % "it,test",
+  Libraries.catsScalaCheck     % "it,test",
 )
 
 lazy val root = (project in file("."))

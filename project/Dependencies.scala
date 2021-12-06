@@ -15,6 +15,8 @@ object Dependencies {
     val logback             = "1.2.3"
     val scalaCheck          = "1.15.3"
     val scalaTest           = "3.2.7"
+    val scalaTestPlusCheck  = "3.2.9.0"
+    val catsScalaTest       = "3.1.1"
     val catsScalaCheck      = "0.3.0"
   }
 
@@ -45,7 +47,9 @@ object Dependencies {
 
     // Test
     lazy val scalaTest           = "org.scalatest"         %% "scalatest"                  % Versions.scalaTest
+    lazy val scalaTestPlusCheck  = "org.scalatestplus"     %% "scalacheck-1-15"            % Versions.scalaTestPlusCheck
     lazy val scalaCheck          = "org.scalacheck"        %% "scalacheck"                 % Versions.scalaCheck
+    lazy val catsScalaTest       = "com.ironcorelabs"      %% "cats-scalatest"             % Versions.catsScalaTest
     lazy val catsScalaCheck      = "io.chrisdavenport"     %% "cats-scalacheck"            % Versions.catsScalaCheck
   }
 
