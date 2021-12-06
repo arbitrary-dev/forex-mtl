@@ -7,6 +7,7 @@ import scala.concurrent.duration.FiniteDuration
 case class ApplicationConfig(
     http: HttpConfig,
     ratesService: RatesServiceConfig,
+    cacheService: CacheServiceConfig,
 )
 
 case class HttpConfig(
@@ -18,4 +19,9 @@ case class HttpConfig(
 case class RatesServiceConfig(
     uri: Uri,
     token: String,
+)
+
+case class CacheServiceConfig(
+    size: Int,
+    expiration: FiniteDuration,
 )

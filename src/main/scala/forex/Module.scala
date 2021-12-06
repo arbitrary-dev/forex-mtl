@@ -14,8 +14,9 @@ import scala.concurrent.ExecutionContext
 class Module[F[_]: ConcurrentEffect: Timer](config: ApplicationConfig, ec: ExecutionContext) {
 
   private val ratesService: RatesService[F] = RatesServices.live[F](config.ratesService, ec)
+  private val cacheService: CacheService[F] = CacheServices.scaffeine[F](config.cacheService)
 
-  private val ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService)
+  private val ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService, cacheService)
 
   private val ratesHttpRoutes: HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes
 

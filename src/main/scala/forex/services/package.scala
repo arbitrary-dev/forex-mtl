@@ -3,6 +3,9 @@ package forex
 package object services {
   type RatesService[F[_]] = rates.Algebra[F]
   final val RatesServices = rates.Interpreters
-  // TODO CacheServices
+
+  type CacheService[F[_]] = cache.Algebra[F]
+  final val CacheServices = cache.Interpreters
+
   // TODO BatchServices
 }
