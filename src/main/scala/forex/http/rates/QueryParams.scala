@@ -2,12 +2,14 @@ package forex.http.rates
 
 import forex.domain.{ Currency, Rate }
 import org.http4s.dsl.impl.QueryParamDecoderMatcher
-import org.http4s.{ QueryParamDecoder, QueryParamEncoder }
+import org.http4s.{ParseFailure, QueryParamDecoder, QueryParamEncoder}
 
 object QueryParams {
 
   private[http] implicit val currencyQueryParamDecoder: QueryParamDecoder[Currency] =
-    QueryParamDecoder[String].map(Currency.fromString)
+    QueryParamDecoder[String] emap { s =>
+      Currency.fromString(s).toRight(ParseFailure("Unsupported currency", s"Currency not supported: $s"))
+    }
 
   implicit val pairQueryParamEncoder: QueryParamEncoder[Rate.Pair] =
     QueryParamEncoder.fromShow
