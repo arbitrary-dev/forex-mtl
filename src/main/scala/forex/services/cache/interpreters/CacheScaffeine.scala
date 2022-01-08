@@ -22,8 +22,8 @@ class CacheScaffeine[F[_]: Applicative](config: CacheServiceConfig) extends Alge
 
   private def hasValidTimestamp(rate: Rate) = {
     val timestamp = rate.timestamp.value
-    val off = rate.timestamp.value.getOffset()
-    val invalid = Instant.now().atOffset(off).minusNanos(config.expiration.toNanos)
+    val off       = rate.timestamp.value.getOffset()
+    val invalid   = Instant.now().atOffset(off).minusNanos(config.expiration.toNanos)
     timestamp.isAfter(invalid)
   }
 

@@ -6,6 +6,7 @@ import cats.syntax.option._
 sealed trait Currency
 
 object Currency {
+
   case object AUD extends Currency
   case object CAD extends Currency
   case object CHF extends Currency
@@ -40,5 +41,4 @@ object Currency {
     case "USD" => USD.some
     case _     => None
   }
-
 }

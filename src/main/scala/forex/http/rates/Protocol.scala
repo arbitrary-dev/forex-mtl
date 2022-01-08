@@ -26,20 +26,17 @@ object Protocol {
 
   // TODO test invalid Currency
   private implicit val currencyEncoder: Encoder[Currency] =
-    Encoder.instance[Currency] { show.show _ andThen Json.fromString }
+    Encoder.instance[Currency](show.show _ andThen Json.fromString)
 
   private implicit val pairDecoder: Decoder[Pair] =
     deriveConfiguredDecoder[Pair]
 
-  implicit val rateDecoder: Decoder[Rate] = (c) => {
+  implicit val rateDecoder: Decoder[Rate] = c =>
     for {
       pair <- c.as[Pair]
       price <- c.downField("price").as[Price]
       timestamp <- c.downField("time_stamp").as[Timestamp]
-    } yield {
-      Rate(pair, price, timestamp)
-    }
-  }
+    } yield Rate(pair, price, timestamp)
 
   implicit val responseEncoder: Encoder[GetApiResponse] =
     deriveConfiguredEncoder[GetApiResponse]

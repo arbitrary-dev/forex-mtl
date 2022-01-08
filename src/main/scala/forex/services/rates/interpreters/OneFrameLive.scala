@@ -14,7 +14,10 @@ import org.http4s.{ Header, Headers, Request }
 
 import scala.concurrent.ExecutionContext
 
-class OneFrameLive[F[_]: ConcurrentEffect](config: RatesServiceConfig, ec: ExecutionContext) extends Algebra[F] {
+class OneFrameLive[F[_]: ConcurrentEffect](
+    config: RatesServiceConfig,
+    ec: ExecutionContext,
+) extends Algebra[F] {
 
   private val headers = Headers.of(Header("token", config.token))
 

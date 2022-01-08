@@ -42,5 +42,4 @@ object Program {
       ratesService: RatesService[F],
       cacheService: CacheService[F],
   ): Algebra[F] = new Program[F](ratesService, cacheService)
-
 }
