@@ -9,7 +9,9 @@ import forex.services.rates.errors._
 
 class OneFrameDummy[F[_]: Applicative] extends Algebra[F] {
 
-  override def get(pair: Rate.Pair): F[Error Either Rate] =
-    Rate(pair, Price(BigDecimal(100)), Timestamp.now).asRight[Error].pure[F]
-
+  override def get(pairs: List[Rate.Pair]): F[Error Either List[Rate]] =
+    pairs
+      .map(Rate(_, Price(BigDecimal(100)), Timestamp.now))
+      .asRight[Error]
+      .pure[F]
 }

@@ -21,9 +21,9 @@ class OneFrameLiveIntSpec extends AsyncWordSpec
     "get rate" in {
       (for {
         service <- serviceIO
-        response <- service.get(Rate.Pair(USD, EUR))
+        response <- service.get(List(Rate.Pair(USD, EUR)))
       } yield {
-        val rate = response.value
+        val rate = response.value.head
         rate.pair.from shouldBe USD
         rate.pair.to shouldBe EUR
       }).unsafeToFuture()

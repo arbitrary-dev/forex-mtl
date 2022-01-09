@@ -2,6 +2,8 @@ package forex.services.rates.interpreters
 
 import cats.effect.ConcurrentEffect
 import cats.syntax.functor._
+import cats.syntax.either._
+import cats.syntax.applicativeError._
 import forex.config.RatesServiceConfig
 import forex.domain.Rate
 import forex.http.rates.Protocol.rateDecoder
@@ -14,6 +16,8 @@ import org.http4s.{ Header, Headers, Request }
 
 import scala.concurrent.ExecutionContext
 
+// TODO log errors
+// TODO log calls
 class OneFrameLive[F[_]: ConcurrentEffect](
     config: RatesServiceConfig,
     ec: ExecutionContext,
@@ -21,16 +25,15 @@ class OneFrameLive[F[_]: ConcurrentEffect](
 
   private val headers = Headers.of(Header("token", config.token))
 
-  override def get(pair: Rate.Pair): F[Error Either Rate] =
+  override def get(pairs: List[Rate.Pair]): F[Error Either List[Rate]] =
     BlazeClientBuilder[F](ec).resource.use { client =>
       val request = Request[F](
-        uri = config.uri +? ("pair", pair),
+        uri = pairs.foldLeft(config.uri)(_ +? ("pair", _)),
         headers = headers,
       )
-      // TODO log errors
-      // TODO log calls
       client
         .expect[List[Rate]](request)
-        .map(_.headOption.toRight(Error.OneFrameLookupFailed("no rate for pair")))
+        .map(_.asRight[Error])
+        .handleError(t => Error.OneFrameLookupFailed(t.getMessage).asLeft)
     }
 }

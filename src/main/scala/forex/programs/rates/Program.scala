@@ -31,7 +31,8 @@ class Program[F[_]: Monad](
 
   private def fromService(pair: Pair) =
     for {
-      rate <- EitherT(ratesService.get(pair)).leftMap(toProgramError)
+      rates <- EitherT(ratesService.get(List(pair))).leftMap(toProgramError)
+      rate :: _ = rates // TODO remove
       _ <- EitherT(cacheService.put(pair, rate)).leftMap(toProgramError)
     } yield rate
 }
