@@ -19,6 +19,8 @@ case class HttpConfig(
 case class RatesServiceConfig(
     uri: Uri,
     token: String,
+    batchSize: Int,
+    batchLinger: FiniteDuration,
 )
 
 case class CacheServiceConfig(

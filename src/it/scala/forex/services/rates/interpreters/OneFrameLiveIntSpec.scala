@@ -5,7 +5,7 @@ import cats.scalatest.{EitherMatchers, EitherValues}
 import forex.config.Config.uriReader
 import forex.config.{Config, RatesServiceConfig}
 import forex.domain.Currency.{EUR, USD}
-import forex.domain.Rate
+import forex.domain.Rate.Pair
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import pureconfig.generic.auto._
@@ -21,9 +21,9 @@ class OneFrameLiveIntSpec extends AsyncWordSpec
     "get rate" in {
       (for {
         service <- serviceIO
-        response <- service.get(List(Rate.Pair(USD, EUR)))
+        response <- service.get(Pair(USD, EUR))
       } yield {
-        val rate = response.value.head
+        val rate = response.value
         rate.pair.from shouldBe USD
         rate.pair.to shouldBe EUR
       }).unsafeToFuture()

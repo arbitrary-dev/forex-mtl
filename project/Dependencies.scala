@@ -16,6 +16,7 @@ object Dependencies {
     val scalaCheck          = "1.15.3"
     val scalaTest           = "3.2.7"
     val scalaTestPlusCheck  = "3.2.9.0"
+    val scalaMock           = "5.1.0"
     val catsScalaTest       = "3.1.1"
     val catsScalaCheck      = "0.3.0"
   }
@@ -26,6 +27,7 @@ object Dependencies {
 
     lazy val cats                = "org.typelevel"         %% "cats-core"                  % Versions.cats
     lazy val catsEffect          = "org.typelevel"         %% "cats-effect"                % Versions.catsEffect
+    lazy val catsEffectLaws      = "org.typelevel"         %% "cats-effect-laws"           % Versions.catsEffect
     lazy val fs2                 = "co.fs2"                %% "fs2-core"                   % Versions.fs2
 
     lazy val http4sDsl           = http4s("http4s-dsl")
@@ -48,6 +50,7 @@ object Dependencies {
     // Test
     lazy val scalaTest           = "org.scalatest"         %% "scalatest"                  % Versions.scalaTest
     lazy val scalaTestPlusCheck  = "org.scalatestplus"     %% "scalacheck-1-15"            % Versions.scalaTestPlusCheck
+    lazy val scalaMock           = "org.scalamock"         %% "scalamock"                  % Versions.scalaMock
     lazy val scalaCheck          = "org.scalacheck"        %% "scalacheck"                 % Versions.scalaCheck
     lazy val catsScalaTest       = "com.ironcorelabs"      %% "cats-scalatest"             % Versions.catsScalaTest
     lazy val catsScalaCheck      = "io.chrisdavenport"     %% "cats-scalacheck"            % Versions.catsScalaCheck

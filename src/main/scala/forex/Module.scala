@@ -5,19 +5,20 @@ import forex.config.ApplicationConfig
 import forex.http.rates.RatesHttpRoutes
 import forex.programs._
 import forex.services._
+import fs2.Stream
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.middleware.{ AutoSlash, Timeout }
 
 import scala.concurrent.ExecutionContext
 
-class Module[F[_]: ConcurrentEffect: Timer](config: ApplicationConfig, ec: ExecutionContext) {
+class Module[F[_]: ConcurrentEffect: Timer](
+    config: ApplicationConfig,
+    ratesService: RatesService[F],
+) {
 
-  private val ratesService: RatesService[F] = RatesServices.live[F](config.ratesService, ec)
-  private val cacheService: CacheService[F] = CacheServices.scaffeine[F](config.cacheService)
-
-  private val ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService, cacheService)
-
+  private val cacheService: CacheService[F]  = CacheServices.scaffeine[F](config.cacheService)
+  private val ratesProgram: RatesProgram[F]  = RatesProgram[F](ratesService, cacheService)
   private val ratesHttpRoutes: HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes
 
   type PartialMiddleware = HttpRoutes[F] => HttpRoutes[F]
@@ -34,5 +35,17 @@ class Module[F[_]: ConcurrentEffect: Timer](config: ApplicationConfig, ec: Execu
   private val http: HttpRoutes[F] = ratesHttpRoutes
 
   val httpApp: HttpApp[F] = appMiddleware(routesMiddleware(http).orNotFound)
+}
 
+object Module {
+
+  def stream[F[_]: ConcurrentEffect: Timer](
+      config: ApplicationConfig,
+      ec: ExecutionContext,
+  ): Stream[F, Module[F]] = {
+    val impl = RatesServices.live[F](config.ratesService, ec)
+    Stream.eval(RatesServices.batched[F](config.ratesService, impl)) map {
+      new Module(config, _)
+    }
+  }
 }
