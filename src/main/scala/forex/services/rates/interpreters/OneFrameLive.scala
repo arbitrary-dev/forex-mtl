@@ -29,7 +29,7 @@ class OneFrameLive[F[_]: ConcurrentEffect](
 
   override def getMany(pairs: List[Pair]): F[Error Either List[Rate]] =
     BlazeClientBuilder[F](ec).resource.use { client =>
-      val uri = pairs.foldLeft(config.uri)(_ +? ("pair", _))
+      val uri = config.uri +? ("pair", pairs)
       val request = Request[F](uri = uri, headers = headers)
       logger.debug(s"Request for: $uri")
       client
