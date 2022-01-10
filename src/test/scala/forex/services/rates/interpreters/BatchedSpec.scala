@@ -16,9 +16,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 import scala.concurrent.duration._
 
-class BatchedSpec extends AnyWordSpec
-  with MockFactory
-  with Matchers {
+class BatchedSpec extends AnyWordSpec with MockFactory with Matchers {
 
   import BatchedSpec._
 
@@ -40,7 +38,7 @@ class BatchedSpec extends AnyWordSpec
 
       (impl.getMany _)
         .expects(where[List[Pair]] { list =>
-          list should contain allOf(pair1, pair2, pair3, pair5)
+          list should contain allOf (pair1, pair2, pair3, pair5)
           true
         })
         .returning(IO.pure(List.empty[Rate].asRight[Error]))
@@ -60,7 +58,7 @@ class BatchedSpec extends AnyWordSpec
 
       (impl.getMany _)
         .expects(where[List[Pair]] { list =>
-          list should contain allOf(pair1, pair2, pair3)
+          list should contain allOf (pair1, pair2, pair3)
           true
         })
         .returning(IO.pure(List.empty[Rate].asRight[Error]))
@@ -68,7 +66,7 @@ class BatchedSpec extends AnyWordSpec
 
       (impl.getMany _)
         .expects(where[List[Pair]] { list =>
-          list should contain only(pair4)
+          list should contain only pair4
           true
         })
         .returning(IO.pure(List.empty[Rate].asRight[Error]))
@@ -89,7 +87,7 @@ class BatchedSpec extends AnyWordSpec
       batchLinger = 100.millis,
     )
 
-  val impl    = mock[RatesService[IO]]
+  val impl = mock[RatesService[IO]]
 }
 
 private object BatchedSpec {

@@ -2,7 +2,7 @@ package forex.services.rates.interpreters
 
 import cats.data.EitherT
 import cats.effect.concurrent.Deferred
-import cats.effect.{Concurrent, ConcurrentEffect, Timer}
+import cats.effect.{ Concurrent, ConcurrentEffect, Timer }
 import cats.syntax.applicative._
 import cats.syntax.apply._
 import cats.syntax.either._
@@ -13,10 +13,10 @@ import cats.syntax.traverse._
 import com.typesafe.scalalogging.StrictLogging
 import forex.config.RatesServiceConfig
 import forex.domain.Rate.Pair
-import forex.domain.{Currency, Rate}
+import forex.domain.{ Currency, Rate }
 import forex.services.rates.Algebra
 import forex.services.rates.errors.Error
-import forex.services.rates.interpreters.Batched.{Request, Result}
+import forex.services.rates.interpreters.Batched.{ Request, Result }
 import fs2.concurrent.Topic
 
 // TODO fix "Not found" issue
@@ -50,14 +50,14 @@ object Batched extends StrictLogging {
       val stream = topic
         .subscribe(Int.MaxValue) // TODO max?
         .drop(1) // drop dummy
-        .evalTap { case (pair, _) => F.delay(logger.debug(s"Pair enqueued: ${ pair.show }")) }
+        .evalTap { case (pair, _) => F.delay(logger.debug(s"Pair enqueued: ${pair.show}")) }
         .groupWithin(config.batchSize, config.batchLinger)
         .evalTap { chunk =>
+          logger.debug(s"Chunk size: ${chunk.size}")
           val pairDefers = chunk.toList.groupBy(_._1).view.mapValues(_.map(_._2)).toMap
           val pairs      = pairDefers.keys.toList
-          val result     = impl.getMany(pairs)
-          (EitherT(result) flatMap { rates =>
-            logger.debug(s"${ rates.size } rates received.")
+          (EitherT(impl.getMany(pairs)) flatMap { rates =>
+            logger.debug(s"${rates.size} rates received.")
             val rateDefers = (rates map { rate =>
               rate -> pairDefers(rate.pair)
             }).toMap

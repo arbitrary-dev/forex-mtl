@@ -1,7 +1,7 @@
 package forex.services.rates
 
 import cats.Applicative
-import cats.effect.{ConcurrentEffect, Timer}
+import cats.effect.{ ConcurrentEffect, Timer }
 import forex.config.RatesServiceConfig
 import forex.services.rates.interpreters._
 

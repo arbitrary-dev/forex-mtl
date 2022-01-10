@@ -23,13 +23,14 @@ import scala.concurrent.ExecutionContext
 class OneFrameLive[F[_]: ConcurrentEffect](
     config: RatesServiceConfig,
     ec: ExecutionContext,
-) extends Algebra[F] with StrictLogging {
+) extends Algebra[F]
+    with StrictLogging {
 
   private val headers = Headers.of(Header("token", config.token))
 
   override def getMany(pairs: List[Pair]): F[Error Either List[Rate]] =
     BlazeClientBuilder[F](ec).resource.use { client =>
-      val uri = config.uri +? ("pair", pairs)
+      val uri     = config.uri +? ("pair", pairs)
       val request = Request[F](uri = uri, headers = headers)
       logger.debug(s"Request for: $uri")
       client
