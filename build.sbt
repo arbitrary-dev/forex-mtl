@@ -65,6 +65,7 @@ libraryDependencies ++= Seq(
   Libraries.pureConfig,
   Libraries.scaffeine,
   Libraries.logback,
+  Libraries.logging,
   Libraries.catsEffectLaws     % Test,
   Libraries.scalaMock          % Test,
   Libraries.scalaTest          % "it,test",

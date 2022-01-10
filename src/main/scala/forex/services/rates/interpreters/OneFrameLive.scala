@@ -5,6 +5,7 @@ import cats.effect.ConcurrentEffect
 import cats.syntax.applicativeError._
 import cats.syntax.either._
 import cats.syntax.functor._
+import com.typesafe.scalalogging.StrictLogging
 import forex.config.RatesServiceConfig
 import forex.domain.Rate
 import forex.domain.Rate.Pair
@@ -19,20 +20,18 @@ import org.http4s.{ Header, Headers, Request }
 import scala.concurrent.ExecutionContext
 
 // TODO log errors
-// TODO log calls
 class OneFrameLive[F[_]: ConcurrentEffect](
     config: RatesServiceConfig,
     ec: ExecutionContext,
-) extends Algebra[F] {
+) extends Algebra[F] with StrictLogging {
 
   private val headers = Headers.of(Header("token", config.token))
 
   override def getMany(pairs: List[Pair]): F[Error Either List[Rate]] =
     BlazeClientBuilder[F](ec).resource.use { client =>
-      val request = Request[F](
-        uri = pairs.foldLeft(config.uri)(_ +? ("pair", _)),
-        headers = headers,
-      )
+      val uri = pairs.foldLeft(config.uri)(_ +? ("pair", _))
+      val request = Request[F](uri = uri, headers = headers)
+      logger.debug(s"Request for: $uri")
       client
         .expect[List[Rate]](request)
         .map(_.asRight[Error])

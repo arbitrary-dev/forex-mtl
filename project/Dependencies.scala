@@ -10,6 +10,7 @@ object Dependencies {
     val circe               = "0.13.0"
     val pureConfig          = "0.14.1"
     val scaffeine           = "5.1.1"
+    val logging             = "3.9.4"
 
     val kindProjector       = "0.10.3"
     val logback             = "1.2.3"
@@ -38,8 +39,9 @@ object Dependencies {
     lazy val circeGeneric        = circe("circe-generic")
     lazy val circeGenericExt     = circe("circe-generic-extras")
     lazy val circeParser         = circe("circe-parser")
-    lazy val pureConfig          = "com.github.pureconfig" %% "pureconfig"                 % Versions.pureConfig
-    lazy val scaffeine           = "com.github.blemale"    %% "scaffeine"                  % Versions.scaffeine
+    lazy val pureConfig          = "com.github.pureconfig"      %% "pureconfig"    % Versions.pureConfig
+    lazy val scaffeine           = "com.github.blemale"         %% "scaffeine"     % Versions.scaffeine
+    lazy val logging             = "com.typesafe.scala-logging" %% "scala-logging" % Versions.logging
 
     // Compiler plugins
     lazy val kindProjector       = "org.typelevel"         %% "kind-projector"             % Versions.kindProjector

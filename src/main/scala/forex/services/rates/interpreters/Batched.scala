@@ -8,15 +8,18 @@ import cats.syntax.apply._
 import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import cats.syntax.show._
 import cats.syntax.traverse._
+import com.typesafe.scalalogging.StrictLogging
 import forex.config.RatesServiceConfig
 import forex.domain.Rate.Pair
 import forex.domain.{Currency, Rate}
 import forex.services.rates.Algebra
 import forex.services.rates.errors.Error
-import forex.services.rates.interpreters.Batched._
+import forex.services.rates.interpreters.Batched.{Request, Result}
 import fs2.concurrent.Topic
 
+// TODO fix wiring issues: Not found, Response timed out
 class Batched[F[_]: Concurrent](topic: Topic[F, Request[F]]) extends Algebra[F] {
 
   override def get(pair: Pair): F[Result[Rate]] =
@@ -30,7 +33,7 @@ class Batched[F[_]: Concurrent](topic: Topic[F, Request[F]]) extends Algebra[F] 
     sys.error("not implemented") // TODO call impl.getMany()
 }
 
-object Batched {
+object Batched extends StrictLogging {
 
   private type Result[A]     = Error Either A
   private type Request[F[_]] = (Pair, Deferred[F, Result[Rate]])
@@ -47,12 +50,14 @@ object Batched {
       val stream = topic
         .subscribe(Int.MaxValue) // TODO max?
         .drop(1) // drop dummy
+        .evalTap { case (pair, _) => F.delay(logger.debug(s"Pair enqueued: ${ pair.show }")) }
         .groupWithin(config.batchSize, config.batchLinger)
         .evalTap { chunk =>
           val pairDefers = chunk.toList.groupBy(_._1).view.mapValues(_.map(_._2)).toMap
           val pairs      = pairDefers.keys.toList
           val result     = impl.getMany(pairs)
           (EitherT(result) flatMap { rates =>
+            logger.debug(s"${ rates.size } rates received.")
             val rateDefers = (rates map { rate =>
               rate -> pairDefers(rate.pair)
             }).toMap

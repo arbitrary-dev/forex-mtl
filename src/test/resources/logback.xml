@@ -9,7 +9,6 @@
         <appender-ref ref="STDOUT" />
     </root>
 
-    <!-- TODO set INFO logging for http4s -->
     <logger name="http4s"/>
   </configuration>
 
