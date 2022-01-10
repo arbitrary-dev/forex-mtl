@@ -19,7 +19,6 @@ import forex.services.rates.errors.Error
 import forex.services.rates.interpreters.Batched.{ Request, Result }
 import fs2.concurrent.Topic
 
-// TODO fix "Not found" issue
 class Batched[F[_]: Concurrent](topic: Topic[F, Request[F]]) extends Algebra[F] {
 
   override def get(pair: Pair): F[Result[Rate]] =
