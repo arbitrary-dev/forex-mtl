@@ -1,7 +1,6 @@
 package forex.services.cache.interpreters
 
-import cats.Applicative
-import cats.syntax.applicative._
+import cats.effect.Sync
 import cats.syntax.either._
 import com.github.blemale.scaffeine.Scaffeine
 import forex.config.CacheServiceConfig
@@ -12,7 +11,7 @@ import forex.services.cache.errors._
 
 import java.time.Instant
 
-class CacheScaffeine[F[_]: Applicative](config: CacheServiceConfig) extends Algebra[F] {
+class CacheScaffeine[F[_]: Sync](config: CacheServiceConfig) extends Algebra[F] {
 
   private val cache =
     Scaffeine()
@@ -27,13 +26,15 @@ class CacheScaffeine[F[_]: Applicative](config: CacheServiceConfig) extends Alge
     timestamp.isAfter(invalid)
   }
 
-  override def get(pair: Rate.Pair): F[Error Either Option[Rate]] =
+  override def get(pair: Rate.Pair): F[Error Either Option[Rate]] = Sync[F].delay {
     cache
       .getIfPresent(pair)
       .filter(hasValidTimestamp)
       .asRight
-      .pure
+  }
 
-  override def put(pair: Pair, rate: Rate): F[Error Either Unit] =
-    cache.put(pair, rate).asRight.pure
+  override def put(pair: Pair, rate: Rate): F[Error Either Unit] = Sync[F].delay {
+    cache.put(pair, rate)
+    ().asRight
+  }
 }

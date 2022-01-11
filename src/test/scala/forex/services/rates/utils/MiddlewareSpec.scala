@@ -9,6 +9,7 @@ import forex.domain.Rate
 import forex.domain.Rate.Pair
 import forex.services._
 import forex.services.rates.errors.Error
+import forex.services.rates.utils.Middleware
 import org.http4s.Uri
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -16,14 +17,14 @@ import org.scalatest.wordspec.AnyWordSpec
 
 import scala.concurrent.duration._
 
-class BatchedSpec extends AnyWordSpec with MockFactory with Matchers {
+class MiddlewareSpec extends AnyWordSpec with MockFactory with Matchers {
 
-  import BatchedSpec._
+  import MiddlewareSpec._
 
-  "Batched OneFrame service implementation" should {
+  "Middleware for OneFrame rates service" should {
 
-    "group requests by count" in {
-      val service = RatesServices.batched[IO](config, impl).unsafeRunSync()
+    "batch requests by count" in {
+      val service = Middleware[IO](config, impl, CacheServices.dummy).unsafeRunSync()
       ctx.tick()
 
       service.get(pair1).unsafeRunAsyncAndForget()
@@ -46,8 +47,8 @@ class BatchedSpec extends AnyWordSpec with MockFactory with Matchers {
       ctx.tick()
     }
 
-    "group requests within time interval" in {
-      val service = RatesServices.batched[IO](config, impl).unsafeRunSync()
+    "batch requests within time interval" in {
+      val service = Middleware[IO](config, impl, CacheServices.dummy).unsafeRunSync()
       ctx.tick()
 
       service.get(pair1).unsafeRunAsyncAndForget()
@@ -90,7 +91,7 @@ class BatchedSpec extends AnyWordSpec with MockFactory with Matchers {
   val impl = mock[RatesService[IO]]
 }
 
-private object BatchedSpec {
+private object MiddlewareSpec {
 
   val pair1 = Pair(USD, USD)
   val pair2 = Pair(EUR, EUR)

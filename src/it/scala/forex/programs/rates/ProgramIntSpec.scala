@@ -49,14 +49,15 @@ class ProgramIntSpec extends AnyWordSpec
   implicit val reqArb = Arbitrary(reqGen)
 
   implicit val contextShift = IO.contextShift(global)
+  implicit val timer = IO.timer(global)
 
   val programIO =
     for {
-      ratesConfig <- Config.load[IO, RatesServiceConfig]("app.rates-service")
-      ratesService = RatesServices.live[IO](ratesConfig, global)
       cacheConfig <- Config.load[IO, CacheServiceConfig]("app.cache-service")
       cacheService = CacheServices.scaffeine[IO](cacheConfig)
+      ratesConfig <- Config.load[IO, RatesServiceConfig]("app.rates-service")
+      ratesService <- RatesServices.live[IO](ratesConfig, cacheService, global)
     } yield {
-      Program(ratesService, cacheService)
+      Program(ratesService)
     }
 }

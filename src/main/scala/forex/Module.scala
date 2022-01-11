@@ -17,8 +17,7 @@ class Module[F[_]: ConcurrentEffect: Timer](
     ratesService: RatesService[F],
 ) {
 
-  private val cacheService: CacheService[F]  = CacheServices.scaffeine[F](config.cacheService)
-  private val ratesProgram: RatesProgram[F]  = RatesProgram[F](ratesService, cacheService)
+  private val ratesProgram: RatesProgram[F]  = RatesProgram[F](ratesService)
   private val ratesHttpRoutes: HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes
 
   type PartialMiddleware = HttpRoutes[F] => HttpRoutes[F]
@@ -42,10 +41,9 @@ object Module {
   def stream[F[_]: ConcurrentEffect: Timer](
       config: ApplicationConfig,
       ec: ExecutionContext,
-  ): Stream[F, Module[F]] = {
-    val impl = RatesServices.live[F](config.ratesService, ec)
-    Stream.eval(RatesServices.batched[F](config.ratesService, impl)) map {
-      new Module(config, _)
-    }
-  }
+  ): Stream[F, Module[F]] =
+    for {
+      cache <- Stream(CacheServices.scaffeine[F](config.cacheService))
+      ratesService <- Stream.eval(RatesServices.live[F](config.ratesService, cache, ec))
+    } yield new Module(config, ratesService)
 }
