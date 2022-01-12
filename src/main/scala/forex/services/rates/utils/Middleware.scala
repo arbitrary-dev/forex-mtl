@@ -16,19 +16,21 @@ import forex.domain.Rate.Pair
 import forex.domain.{ Currency, Rate }
 import forex.services.cache.errors.{ Error => CacheServiceError }
 import forex.services.rates.errors.Error
-import forex.services.rates.utils.Middleware.{ Request, Result, toRatesError }
-import forex.services.{CacheService, RatesService}
+import forex.services.rates.utils.Middleware.{ toRatesError, Request, Result }
+import forex.services.{ CacheService, RatesService }
 import fs2.concurrent.Topic
 import cats.effect.Sync
 
 /** Middleware utility that wraps rates service to provide additional goodies.
- *
- * @param topic A topic to publish requests for batching
- * @param cache Cache service for results caching
- */
+  *
+  * @param topic
+  *   A topic to publish requests for batching
+  * @param cache
+  *   Cache service for results caching
+  */
 class Middleware[F[_]: Concurrent](
-  topic: Topic[F, Request[F]],
-  cache: CacheService[F],
+    topic: Topic[F, Request[F]],
+    cache: CacheService[F],
 ) extends RatesService[F] {
 
   override def get(pair: Pair): F[Result[Rate]] =
@@ -44,9 +46,9 @@ class Middleware[F[_]: Concurrent](
       result <- d.get
       // cache the result
       result <- result.fold(
-        _.asLeft.pure,
-        rate => EitherT(cache.put(pair, rate)).bimap(toRatesError, _ => rate).value
-      )
+                  _.asLeft.pure,
+                  rate => EitherT(cache.put(rate)).bimap(toRatesError, _ => rate).value
+                )
     } yield result
 
   override def getMany(pairs: List[Pair]): F[Either[Error, List[Rate]]] =
@@ -63,7 +65,8 @@ object Middleware extends StrictLogging {
       impl: RatesService[F],
       cache: CacheService[F],
   ): F[RatesService[F]] = {
-    val dummy = Pair(Currency.USD, Currency.USD) -> Deferred.unsafe[F, Result[Rate]]
+    val dummy         = Pair(Currency.USD, Currency.USD) -> Deferred.unsafe[F, Result[Rate]]
+    def wrap[A](x: A) = EitherT(Sync[F].delay(x.asRight[Error]))
 
     Topic[F, Request[F]](dummy) flatMap { topic =>
       val stream = topic
@@ -71,23 +74,43 @@ object Middleware extends StrictLogging {
         .drop(1) // drop dummy
         .evalTap { case (pair, _) => Sync[F].delay(logger.debug(s"Pair enqueued: ${pair.show}")) }
         .groupWithin(config.batchSize, config.batchLinger)
-        .evalTap { chunk =>
-          logger.debug(s"Chunk size: ${chunk.size}")
-          val pairDefers = chunk.toList.groupBy(_._1).view.mapValues(_.map(_._2)).toMap
-          val pairs      = pairDefers.keys.toList
-          (EitherT(impl.getMany(pairs)) flatMap { rates =>
-            logger.debug(s"${rates.size} rates received.")
-            val rateDefers = (rates map { rate =>
-              rate -> pairDefers(rate.pair)
-            }).toMap
-            EitherT(
-              rateDefers
-                .flatMap { case (rate, defers) => defers.map(_.complete(rate.asRight[Error])) }
-                .toList
-                .sequence
-                .map(_.asRight[Error])
-            )
-          }).value
+        .evalMap { chunk =>
+          (for {
+            pairDefers <- wrap(chunk.toList.groupBy(_._1).view.mapValues(_.map(_._2)).toMap)
+            pairsEnqueued <- wrap(pairDefers.keys.toList)
+            pairsToPreheat <- EitherT(
+                                cache
+                                  .getPairsToPreheat(config.batchSize - chunk.size, besides = pairsEnqueued)
+                                  .map(_.asRight[Error])
+                              )
+            _ <- wrap(logger.debug(s"Chunk size: ${chunk.size} + ${pairsToPreheat.size} (cache preheat)"))
+            ratesResult <- EitherT(impl.getMany(pairsEnqueued ++ pairsToPreheat))
+          } yield pairDefers -> ratesResult).value
+        }
+        .evalTap { input =>
+          (for {
+            input <- EitherT.fromEither(input)
+            (pairDefers, ratesResult) = input
+            rates <- wrap(ratesResult)
+            _ = logger.debug(s"${rates.size} rates received.")
+            rateDefers = (rates map { rate =>
+                           rate -> pairDefers.getOrElse(rate.pair, Nil)
+                         }).toMap
+            result <- EitherT(
+                        rateDefers
+                          .flatMap {
+                            case (rate, Nil)    => List(cache.put(rate).as(()))
+                            case (rate, defers) => defers.map(_.complete(rate.asRight))
+                          }
+                          .toList
+                          .sequence
+                          .map(_.asRight[Error])
+                      )
+                        .leftMap { error =>
+                          rateDefers.valuesIterator.flatten.foreach(_.complete(error.asLeft))
+                          error
+                        }
+          } yield result).value
         }
         .compile
         .drain

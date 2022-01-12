@@ -74,6 +74,8 @@ class MiddlewareSpec extends AnyWordSpec with MockFactory with Matchers {
       service.get(pair4).unsafeRunAsyncAndForget()
       ctx.tick(100.millis)
     }
+
+    "preheat cache when batch capacity allows" is pending // TODO
   }
 
   val ctx            = TestContext()

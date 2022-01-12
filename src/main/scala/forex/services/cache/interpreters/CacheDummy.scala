@@ -14,7 +14,9 @@ class CacheDummy[F[_]: Applicative] extends Algebra[F] {
   override def get(pair: Pair): F[Error Either Option[Rate]] =
     none.asRight.pure
 
-  override def put(pair: Pair, rate: Rate): F[Error Either Unit] =
+  override def put(rate: Rate): F[Error Either Unit] =
     ().asRight.pure
 
+  override def getPairsToPreheat(n: Int, besides: List[Pair]): F[List[Pair]] =
+    List.empty.pure
 }

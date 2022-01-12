@@ -7,5 +7,7 @@ import errors._
 
 trait Algebra[F[_]] {
   def get(pair: Pair): F[Error Either Option[Rate]]
-  def put(pair: Pair, rate: Rate): F[Error Either Unit]
+  def put(rate: Rate): F[Error Either Unit]
+
+  def getPairsToPreheat(n: Int, besides: List[Pair]): F[List[Pair]]
 }

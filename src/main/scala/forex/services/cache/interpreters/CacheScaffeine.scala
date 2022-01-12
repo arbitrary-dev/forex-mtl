@@ -4,12 +4,13 @@ import cats.effect.Sync
 import cats.syntax.either._
 import com.github.blemale.scaffeine.Scaffeine
 import forex.config.CacheServiceConfig
-import forex.domain.Rate
 import forex.domain.Rate.Pair
+import forex.domain.{Currency, Rate}
 import forex.services.cache.Algebra
 import forex.services.cache.errors._
 
 import java.time.Instant
+import scala.collection.concurrent.TrieMap
 
 class CacheScaffeine[F[_]: Sync](config: CacheServiceConfig) extends Algebra[F] {
 
@@ -17,7 +18,20 @@ class CacheScaffeine[F[_]: Sync](config: CacheServiceConfig) extends Algebra[F] 
     Scaffeine()
       .expireAfterWrite(config.expiration)
       .maximumSize(config.size.toLong)
+      .evictionListener[Pair, Rate] { case (pair, _, _) => pairsToPreheat += pair -> () }
       .build[Pair, Rate]()
+
+  private val pairsToPreheat =
+    TrieMap.from(
+      for {
+        a <- Currency.All
+        b <- Currency.All
+      } yield Pair(a, b) -> ()
+    )
+
+  override def getPairsToPreheat(n: Int, besides: List[Pair]): F[List[Pair]] = Sync[F].delay {
+    pairsToPreheat.keys.filterNot(besides.contains).take(n).toList
+  }
 
   private def hasValidTimestamp(rate: Rate) = {
     val timestamp = rate.timestamp.value
@@ -33,8 +47,9 @@ class CacheScaffeine[F[_]: Sync](config: CacheServiceConfig) extends Algebra[F] 
       .asRight
   }
 
-  override def put(pair: Pair, rate: Rate): F[Error Either Unit] = Sync[F].delay {
-    cache.put(pair, rate)
+  override def put(rate: Rate): F[Error Either Unit] = Sync[F].delay {
+    cache.put(rate.pair, rate)
+    pairsToPreheat -= rate.pair
     ().asRight
   }
 }
