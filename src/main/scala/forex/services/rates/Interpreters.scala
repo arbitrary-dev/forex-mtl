@@ -1,7 +1,7 @@
 package forex.services.rates
 
 import cats.Applicative
-import cats.effect.{ConcurrentEffect, Sync, Timer}
+import cats.effect.{ ConcurrentEffect, Sync, Timer }
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import forex.config.RatesServiceConfig
@@ -15,9 +15,9 @@ object Interpreters {
   def dummy[F[_]: Applicative]: Algebra[F] =
     new OneFrameDummy[F]()
   def live[F[_]: ConcurrentEffect: Timer](
-    config: RatesServiceConfig,
-    cache: CacheService[F],
-    ec: ExecutionContext,
+      config: RatesServiceConfig,
+      cache: CacheService[F],
+      ec: ExecutionContext,
   ): F[Algebra[F]] =
     for {
       live <- Sync[F].delay(new OneFrameLive[F](config, ec))

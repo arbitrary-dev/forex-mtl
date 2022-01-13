@@ -5,7 +5,7 @@ import cats.syntax.either._
 import com.github.blemale.scaffeine.Scaffeine
 import forex.config.CacheServiceConfig
 import forex.domain.Rate.Pair
-import forex.domain.{Currency, Rate}
+import forex.domain.{ Currency, Rate }
 import forex.services.cache.Algebra
 import forex.services.cache.errors._
 
