@@ -14,6 +14,7 @@ import pureconfig.generic.auto._
 
 import scala.concurrent.ExecutionContext.global
 
+// TODO fix
 class ProgramIntSpec extends AnyWordSpec
   with EitherValues
   with ScalaCheckPropertyChecks
